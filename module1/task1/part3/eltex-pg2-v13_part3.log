@@ -1,0 +1,14 @@
+mkdir -p D1/D2/D3
+touch D1/D2/file.txt
+ln -s /home/eltex-pg2-v13/D1/D2/file.txt sym
+ln /home/eltex-pg2-v13/D1/D2/file.txt hard
+cat D1/D2/D3/sym
+cat D1/D2/D3/hard
+ls -li
+mv ~/D1/D2/file.txt ~/D1
+rm -r D1/D2
+find / -type f -size +50M 2>/dev/null
+find ~ -type f -mtime -1
+which find
+file /usr/bin/find
+file /boot/initrd.img*

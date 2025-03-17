@@ -1,0 +1,57 @@
+2.
+git config --global user.name "leafer-k"
+git config --global user.email "kor.sash2015@yandex.ru"
+git config --global init.defaultBranch main
+
+3.
+apt update
+apt install git gh
+
+4.
+ssh-keygen -t ed25519 -f ~/.ssh/git_key
+
+5. Подключились к Github
+6. 
+gh auth setup-git --hostname github.com
+
+7. Всё в порядке
+
+gh auth status
+
+github.com
+  ✓ Logged in to github.com account leafer-k (/root/.config/gh/hosts.yml)
+  - Active account: true
+  - Git operations protocol: ssh
+  - Token: gho_************************************
+  - Token scopes: 'admin:public_key', 'gist', 'read:org', 'repo'
+
+
+8. gh repo create --public eltex
+9.
+mkdir ~/eltex && cd ~/eltex
+echo "# Результаты выполнения практических заданий в школе Eltex" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/leafer-k/eltex.git
+
+git status
+On branch main
+nothing to commit, working tree clean
+
+git push -u origin main
+Enumerating objects: 3, done.
+Counting objects: 100% (3/3), done.
+Delta compression using up to 2 threads
+Compressing objects: 100% (2/2), done.
+Writing objects: 100% (3/3), 308 bytes | 308.00 KiB/s, done.
+Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+To https://github.com/leafer-k/eltex.git
+ * [new branch]      main -> main
+branch 'main' set up to track 'origin/main'.
+
+mkdir -p module1/task1
+mkdir module1/task2
+mkdir module1/task3
+
