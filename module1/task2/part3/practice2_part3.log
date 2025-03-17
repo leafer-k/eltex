@@ -55,3 +55,22 @@ mkdir -p module1/task1
 mkdir module1/task2
 mkdir module1/task3
 
+scp -i .ssh/pr2_key  /home/eltex-pg2-v13/*.log root@172.16.9.213:~/eltex
+scp -i .ssh/pr2_key  /home/eltex-pg2-v13/*.txt root@172.16.9.213:~/eltex
+
+Раскидал файлы по папкам
+
+git add .
+git commit
+git push
+
+10.
+mkdir ~/eltex_clone && cd ~/eltex_clone
+git clone https://github.com/leafer-k/eltex.git .
+
+Изменил README
+
+git fetch 
+git log origin/main
+git diff main origin/main
+git merge
