@@ -1,0 +1,85 @@
+su - user1
+
+2. Тут мы при помощи find находим в /proc/PID/task/ все потоки, после чего получаем обрабатываем полученные результаты при помощи awk и выводим результат.
+Тут мы проверяем, повтеряется ли PID при очередном потоке, и если повторяется, значит, что у этого процесса несколько потоков, результат +1
+(делаем это только 1 раз для каждого потока).
+
+find /proc -type d -regex "/proc/[0-9]+/task/[0-9]+" -maxdepth 3 2>/dev/null |
+awk -F '/' '{if($3 == prev){if(flag == 0){res++; flag = 1}} else{flag = 0}; prev = $3;} END {print res;}'
+
+Результат: 10
+
+3. Ввели команду top, нажали f для редактирования колонок, отредактировали соответственно заданию.
+
+Вывод (часть):
+
+top - 17:34:37 up 8 days, 21:30,  2 users,  load average: 0.00, 0.00, 0.00
+Tasks: 113 total,   1 running, 112 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+MiB Mem :   3916.0 total,   2850.7 free,    477.6 used,    861.1 buff/cache
+MiB Swap:   3185.0 total,   3185.0 free,      0.0 used.   3438.4 avail Mem
+
+    PID USER     RUSER     PR  NI S  %CPU  %MEM     TIME+ COMMAND
+      1 root     root      20   0 S   0.0   0.3   0:09.65 systemd
+      2 root     root      20   0 S   0.0   0.0   0:00.05 kthreadd
+      3 root     root      20   0 S   0.0   0.0   0:00.00 pool_workqueue_release
+      4 root     root       0 -20 I   0.0   0.0   0:00.00 kworker/R-rcu_g
+      5 root     root       0 -20 I   0.0   0.0   0:00.00 kworker/R-rcu_p
+      6 root     root       0 -20 I   0.0   0.0   0:00.00 kworker/R-slub_
+      7 root     root       0 -20 I   0.0   0.0   0:00.00 kworker/R-netns
+     10 root     root       0 -20 I   0.0   0.0   0:00.00 kworker/0:0H-kblockd
+     12 root     root       0 -20 I   0.0   0.0   0:00.00 kworker/R-mm_pe
+     13 root     root      20   0 I   0.0   0.0   0:00.00 rcu_tasks_kthread
+     14 root     root      20   0 I   0.0   0.0   0:00.00 rcu_tasks_rude_kthread
+     15 root     root      20   0 I   0.0   0.0   0:00.00 rcu_tasks_trace_kthread
+
+5. Нажали о, ввели фильтр "RUSER=user1", получили нужные процессы. Теперь, нажав k, вводим PID нужного процесса и потом код сигнала.
+Ничего не произошло при вводе всех сигналов, кроме 9 (SIGKILL).
+В терминале, где была введена команда passwd, получили:
+
+user1@eltex-practice2-pg2-v13:~$ passwd
+Changing password for user1.
+Current password: Killed
+
+6-7:
+user1@eltex-practice2-pg2-v13:~$ vim ~/file_task3.txt
+
+[1]+  Stopped                 vim ~/file_task3.txt
+user1@eltex-practice2-pg2-v13:~$ sleep 600
+^Z
+[2]+  Stopped                 sleep 600
+user1@eltex-practice2-pg2-v13:~$ jobs
+[1]-  Stopped                 vim ~/file_task3.txt
+[2]+  Stopped                 sleep 600
+
+8. Выполнил bg
+
+user1@eltex-practice2-pg2-v13:~$ bg
+[2]+ sleep 600 &
+user1@eltex-practice2-pg2-v13:~$ jobs
+[1]+  Stopped                 vim ~/file_task3.txt
+[2]-  Running                 sleep 600 &
+
+9. Нашли PID команды sleep, выполнили:
+
+renice 10 29430
+29430 (process ID) old priority 0, new priority 10
+
+10. Проверили через top:
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+  29430 user1     30  10    5684   2048   2048 S   0.0   0.1   0:00.00 sleep
+
+11. fg %1
+
+12.
+kill -15 %2
+jobs
+[2]+  Terminated              sleep 600
+
+13.
+trap 'echo "Меня голыми руками не возьмёшь!"' SIGINT SIGQUIT
+
+Результат:
+Меня голыми руками не возьмёшь!$ ^C
+Меня голыми руками не возьмёшь!$ ^\
