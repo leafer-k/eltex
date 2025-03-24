@@ -7,7 +7,7 @@ float sum(float a, float b) {
     return a+b;
 }
 
-float diff(float a, float b) {
+float substract(float a, float b) {
     return a-b;
 }
 
@@ -44,7 +44,7 @@ int main() {
 
 	switch (action) {
 	    case '+': res = sum(a, b); break;
-	    case '-': res = diff(a, b); break;
+	    case '-': res = substract(a, b); break;
 	    case '*': res = multi(a, b); break;
 	    case '/': res = division(a, b); break;
 	    default: printf("\nWrong input\n"); continue;
