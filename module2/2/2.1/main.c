@@ -5,7 +5,7 @@
 
 int main() {
     setlocale(LC_ALL, "Russian");
-    struct Person** array = malloc(sizeof(struct Person*));
+    Person** array = malloc(sizeof( Person*));
     array[0] = NULL;
     menu(&array);
     free(array);

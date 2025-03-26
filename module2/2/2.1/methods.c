@@ -40,7 +40,7 @@ void removeNewline(char* str) {
     }
 }
 
-void print(struct Person* p, int index) {
+void print( Person* p, int index) {
     printf("%d)\t%-15s %-15s %-15s %-20s\n",
         index, p->lastName, p->firstName, p->patronymic, p->company);
 
@@ -67,7 +67,7 @@ void print(struct Person* p, int index) {
     printf("\n");
 }
 
-void printArr(struct Person** arr) {
+void printArr( Person** arr) {
     int size = 0;
     while (arr[size] != NULL) {
         print(arr[size], size);
@@ -75,23 +75,23 @@ void printArr(struct Person** arr) {
     }
 }
 
-void push(struct Person*** arr, struct Person* new_person) {
+void push( Person*** arr,  Person* new_person) {
     int size = 0;
     while ((*arr)[size] != NULL) size++;
 
-    struct Person** new_arr = realloc(*arr, (size + 2) * sizeof(struct Person*));
+     Person** new_arr = realloc(*arr, (size + 2) * sizeof( Person*));
     if (!new_arr) {
         perror("realloc failed");
         return;
     }
 
-    new_arr[size] = malloc(sizeof(struct Person));
+    new_arr[size] = malloc(sizeof( Person));
     if (!new_arr[size]) {
         perror("malloc failed");
         return;
     }
 
-    for (int i = 0; i < sizeof(struct Person); i++) {
+    for (int i = 0; i < sizeof( Person); i++) {
         ((char*)new_arr[size])[i] = ((char*)new_person)[i];
     }
 
@@ -99,7 +99,7 @@ void push(struct Person*** arr, struct Person* new_person) {
     *arr = new_arr;
 }
 
-void deleteIndex(struct Person*** arr, int index) {
+void deleteIndex( Person*** arr, int index) {
     int size = 0;
     while ((*arr)[size] != NULL) size++;
 
@@ -118,7 +118,7 @@ void deleteIndex(struct Person*** arr, int index) {
 }
 
 
-void initPerson(struct Person* new_p) {
+void initPerson( Person* new_p) {
     printf("Введите Фамилию: ");
     char temp[40];
     fgets(temp, 30, stdin);
@@ -163,13 +163,13 @@ void initPerson(struct Person* new_p) {
 
 
 
-void addPerson(struct Person*** arr) {
-    struct Person* new_p = malloc(sizeof(struct Person));
+void addPerson( Person*** arr) {
+     Person* new_p = malloc(sizeof( Person));
     if (!new_p) {
         perror("malloc failed");
         return;
     }
-    for (int i = 0; i < sizeof(struct Person); i++) {
+    for (int i = 0; i < sizeof( Person); i++) {
         ((char*)new_p)[i] = 0;
     }
 
@@ -178,7 +178,7 @@ void addPerson(struct Person*** arr) {
     push(arr, new_p);
 }
 
-void editPerson(struct Person** arr) {
+void editPerson( Person** arr) {
     int index;
     printf("Введите индекс контакта для редактирования: ");
     scanf("%d", &index);
@@ -189,7 +189,7 @@ void editPerson(struct Person** arr) {
         return;
     }
 
-    struct Person* p = arr[index];
+     Person* p = arr[index];
 
     int editChoice;
     do {
@@ -253,8 +253,8 @@ void editPerson(struct Person** arr) {
     } while (editChoice != 0);
 }
 
-void loadExample(struct Person*** arr) {
-    struct Person examples[] = {
+void loadExample( Person*** arr) {
+     Person examples[] = {
         {"Иван", "Иванов", "Иванович", "TechCorp", {"89005553322", "89261112233"}, {"ivan@corp.com", "ivan123@gmail.com"}},
         {"Мария", "Сидорова", "Александровна", "SoftGroup", {"89037778899"}, {"maria@soft.com"}},
         {"Андрей", "Козлов", "Викторович", "ITSolutions", {"89161114455", "89997776655"}, {"andrey.k@it.com", "kozlov.a@gmail.com"}},
@@ -270,7 +270,7 @@ void loadExample(struct Person*** arr) {
 }
 
 
-void menu(struct Person*** arr) {
+void menu( Person*** arr) {
     int choice;
     do {
         printf("\n1. Вывести список\n2. Добавить контакт\n3. Удалить контакт\n4. Редактировать\n5. Загрузить пример\n0. Выйти\n");
