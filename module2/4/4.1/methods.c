@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "headers.h"
 
 #define MAX_PHONE_NUMS 5
@@ -84,16 +85,12 @@ void printList(struct List* first) {
 }
 
 
-void push(struct List* first, Person* new_person) {
-    struct List* list = first;
+void push(struct List** first, Person* new_person) {
+    struct List* list = *first;
 
-    if (first->val == NULL) {
-        first->val = new_person;
+    if ((*first)->val == NULL) {
+        (*first)->val = new_person;
         return;
-    }
-
-    while (list->next != NULL) {
-        list = list->next;
     }
 
     struct List* new_node = (struct List*)malloc(sizeof(struct List));
@@ -103,10 +100,25 @@ void push(struct List* first, Person* new_person) {
     }
 
     new_node->val = new_person;
-    new_node->next = NULL;
-    new_node->prev = list;
 
-    list->next = new_node;
+        while(list->next != NULL && strcmp(list->next->val->lastName, new_person->lastName) < 0) {
+            list = list->next;
+        }
+
+	if(strcmp(list->val->lastName, new_person->lastName) > 0 && list == (*first)) {
+	    new_node->next = *first;
+	    new_node->prev = NULL;
+	    (*first)->prev = new_node;
+            *first = new_node;
+	    return;
+	}
+
+        new_node->next = list->next;
+	new_node->prev = list;
+	if(new_node->next != NULL) new_node->next->prev = new_node;
+        list->next = new_node;
+
+    return;
 }
 
 void deleteIndex(struct List** first, int index) {
@@ -192,13 +204,13 @@ void initPerson(Person* new_p) {
 
 
 
-void addPerson(struct List* arr) {
+void addPerson(struct List** arr) {
      Person* new_p = malloc(sizeof( Person));
     if (!new_p) {
         perror("malloc failed");
         return;
     }
-    for (int i = 0; i < sizeof( Person); i++) {
+    for (int i = 0; i < sizeof(Person); i++) {
         ((char*)new_p)[i] = 0;
     }
 
@@ -299,7 +311,7 @@ void loadExample(struct List* list) {
     for (int i = 0; i < num_examples; i++) {
 	Person* newPerson = (Person*)malloc(sizeof(Person));
         *newPerson = examples[i];
-	push(list, newPerson);
+	push(&list, newPerson);
     }
 
     printf("Примерные контакты загружены!\n");
@@ -314,7 +326,7 @@ void menu(struct List* list) {
         getchar();
         switch (choice) {
         case 1: printList(list); break;
-        case 2: addPerson(list); break;
+        case 2: addPerson(&list); break;
         case 3: {
             int delIndex;
             printf("Введите индекс для удаления: ");

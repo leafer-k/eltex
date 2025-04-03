@@ -23,10 +23,10 @@ void removeNewline(char*);
 
 void print(Person*, int);
 void printList(struct List*);
-void push(struct List*, Person*);
+void push(struct List**, Person*);
 void deleteIndex(struct List**, int);
 void initPerson(Person*);
-void addPerson(struct List*);
+void addPerson(struct List**);
 void editPerson(struct List*);
 void loadExample(struct List*);
 
