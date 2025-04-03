@@ -14,14 +14,16 @@ struct List {
 void printTask(Task*);
 void printList(struct List*);
 void add(struct List**, Task*);
+void removeTask(struct List**, struct List**);
 
 Task* initTask(int, char*);
-Task* getTaskByPriority(struct List*, int);
 
-void printTasksHigherPriority(struct List*, int);
+int pullTaskByPriority(struct List**, int);
+
+void pullTasksHigherPriority(struct List**, int);
 
 void generateTasks(struct List**, int);
 
-Task* getFirst(struct List*);
+void pullFirst(struct List**);
 
 void menu(struct List*);

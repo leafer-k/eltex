@@ -71,23 +71,37 @@ Task* initTask(int priority, char* name) {
 }
 
 
-Task* getTaskByPriority(struct List* list, int pr){
-    struct List* curr = list;
+int pullTaskByPriority(struct List** list, int pr){
+    struct List** curr = list;
+    struct List** prev = list;
+
     while(curr != NULL) {
-	if(curr->val->priority == pr) return curr->val;
-	curr = curr->next;
+	if((*curr)->val->priority == pr) {
+	    removeTask(prev, curr);
+	    return 1;
+	}
+	prev = curr;
+	curr = &((*curr)->next);
     }
-    return NULL;
+    return 0;
 }
 
-void printTasksHigherPriority(struct List* list, int pr) {
-    struct List* curr = list;
+void removeTask(struct List** prev, struct List** curr) {
+    if((*prev) == (*curr)) {
+	(*curr) = (*curr)->next;
+    } else {
+	(*prev)->next = (*curr)->next;
+    }
+    return;
+}
 
-    if(curr->val == NULL) return;
+void pullTasksHigherPriority(struct List** list, int pr) {
+    struct List** curr = list;
+    struct List** prev = curr;
+    if((*curr)->val == NULL) return;
 
-    while(curr != NULL && curr->val->priority <= pr) {
-	printTask(curr->val);
-	curr = curr->next;
+    while((*curr)->next != NULL && (*curr)->val->priority <= pr) {
+	removeTask(prev, curr);
     }
     return;
 }
@@ -103,8 +117,8 @@ void generateTasks(struct List** list, int num) {
     }
 }
 
-Task* getFirst(struct List* list) {
-    return list->val;
+void pullFirst(struct List** list) {
+    removeTask(list, list);
 }
 
 
@@ -114,7 +128,7 @@ void menu(struct List* list) {
     int pr, n;
 
     do {
-	printf("\n1. Добавить задачу\n2. Вывести очередь\n3. Вывести первую задачу из очереди\n4. Выборка задачи по приоритету\n5. Выборка задач с приоритетом, не ниже заданного\n6. Сгенерировать пример\n0. Выход\n\nВведите команду:\n");
+	printf("\n1. Добавить задачу\n2. Вывести очередь\n3. Выполнить первую задачу из очереди\n4. Выполнение задачи по приоритету\n5. Выполнение задач с приоритетом, не ниже заданного\n6. Сгенерировать пример\n0. Выход\n\nВведите команду:\n");
 	scanf(" %c", &action);
 
 	switch(action) {
@@ -138,9 +152,8 @@ void menu(struct List* list) {
 		printList(list);
 		break;
 	    case '3':
-		if(getFirst(list)) {
-		    printf("id\tPri\tName\n");
-		    printTask(getFirst(list));
+		if(list->val) {
+		    pullFirst(&list);
 		} else {
 		    printf("Очередь пуста!\n");
 		}
@@ -148,9 +161,8 @@ void menu(struct List* list) {
 	    case '4':
 		printf("Введите приоритет:\n");
 		scanf("%d", &pr);
-		if(getTaskByPriority(list, pr)) {
-		    printf("id\tPri\tName\n");
-		    printTask(getTaskByPriority(list, pr));
+		if(pullTaskByPriority(&list, pr)) {
+		    printf("Выполнено\n");
 		} else {
 		    printf("Не найдено\n");
 		}
@@ -158,8 +170,7 @@ void menu(struct List* list) {
 	    case '5':
 		printf("Введите приоритет:\n");
 		scanf("%d", &pr);
-		printf("id\tPri\tName\n");
-		printTasksHigherPriority(list, pr);
+		pullTasksHigherPriority(&list, pr);
 		break;
 	    case '6':
 		printf("Введите количество:\n");
