@@ -97,6 +97,7 @@ void intToOctStr(int a, char* out) {
 int changeMode(char* command) {
     int res, i = 0, k = 0;
     char path[100];
+    char buff[30];
     char groups[5];
     char changeMode[5];
     int subMask = 0;
@@ -104,50 +105,85 @@ int changeMode(char* command) {
     int oldMode, newMode;
     struct stat st;
 
-
     for(; command[i] != ' ' && command[i] != '\0'; i++);
     i++;
-    for(k = 0; command[i] != '+' && command[i] != '-' && command[i] != '=' && command[i] != '\0'; i++, k++) groups[k] = command[i];
-    groups[k] = '\0';
-    for(k = 0; command[i] != ' ' && command[i] != '\0'; i++, k++) changeMode[k] = command[i];
-    changeMode[k] = '\0';
+
+    for(k = 0; command[i] != ' ' && command[i] != '\0'; i++, k++) {
+	buff[k] = command[i];
+    }
     i++;
+    buff[k] = '\0';
+
+    int flag = 0;
+
+    for (int j = 0; buff[j] != '\0'; j++) {
+	if(!(buff[j] - '0' >= 0 && buff[j] - '0' <= 7)) {
+	    flag = 1;
+	    break;
+	}
+    }
+
+    if(flag == 1) {
+	int j = 0;
+	for(k = 0; buff[j] != '+' && buff[j] != '-' && buff[j] != '=' && buff[j] != '\0'; j++, k++) groups[k] = buff[j];
+	groups[k] = '\0';
+        for(k = 0; buff[j] != ' ' && buff[j] != '\0'; j++, k++) changeMode[k] = buff[j];
+        changeMode[k] = '\0';
+    }
+
+
     for(k = 0; command[i] != ' ' && command[i] != '\0'; i++, k++) path[k] = command[i];
     path[k] ='\0';
 
-    for(k = 1; changeMode[k] != '\0'; k++) {
-	if(changeMode[k] == 'r') {
-	    subMask += 4;
-	} else if(changeMode[k] == 'w') {
-	    subMask += 2;
-	} else if (changeMode[k] == 'x') {
-	    subMask += 1;
-	} else {
-	    printf("Error!\n");
+    if(flag == 1) {
+        for(k = 1; changeMode[k] != '\0'; k++) {
+	    if(changeMode[k] == 'r') {
+	        subMask += 4;
+	    } else if(changeMode[k] == 'w') {
+	        subMask += 2;
+	    } else if (changeMode[k] == 'x') {
+	        subMask += 1;
+	    } else {
+	        printf("Error!\n");
+	        return -1;
+	    }
+        }
+
+	for(k = 0; groups[k] != '\0'; k++) {
+	    if(groups[k] == 'u' || groups[k] == 'a') mask = (mask | (subMask << 6));
+	    if(groups[k] == 'g' || groups[k] == 'a') mask = (mask | (subMask << 3));
+	    if(groups[k] == 'o' || groups[k] == 'a') mask = mask | subMask;
+	}
+    }
+
+    if(flag == 0) {
+	    newMode = digitToInt(buff);
+	    return newMode;
+    }
+
+    int type = initType(path);
+
+    if (type != -1) {
+	oldMode = type == 1 ? digitToInt(path) : letterToInt(path);
+    } else {
+	if (stat(path, &st) != -1) {
+	    oldMode = st.st_mode;
+        } else {
+	    printf("Error opening file!\n");
 	    return -1;
 	}
     }
 
-    for(k = 0; groups[k] != '\0'; k++) {
-	if(groups[k] == 'u' || groups[k] == 'a') mask = (mask | (subMask << 6));
-	if(groups[k] == 'g' || groups[k] == 'a') mask = (mask | (subMask << 3));
-	if(groups[k] == 'o' || groups[k] == 'a') mask = mask | subMask;
-    }
-
-   if (stat(path, &st) != -1) {
-	oldMode = st.st_mode;
-	switch(changeMode[0]) {
-	    case '+': newMode = oldMode | mask; break;
-	    case '-': newMode = oldMode & (~mask); break;
-	    case '=': newMode = mask; break;
-	    default: return -1;
-	}
-    } else {
-	printf("Error opening file!\n");
-	return -1;
+    switch(changeMode[0]) {
+	case '+': newMode = oldMode | mask; break;
+	case '-': newMode = oldMode & (~mask); break;
+	case '=': newMode = mask; break;
+	default: return -1;
     }
     return newMode;
 }
+
+
 
 int checkFormat(char* str) {
     int flag = 0;
