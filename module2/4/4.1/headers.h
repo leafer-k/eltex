@@ -27,7 +27,9 @@ void push(struct List**, Person*);
 void deleteIndex(struct List**, int);
 void initPerson(Person*);
 void addPerson(struct List**);
-void editPerson(struct List*);
+void editPerson(struct List**);
 void loadExample(struct List*);
+
+void sort(struct List**);
 
 void menu(struct List*);
