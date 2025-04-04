@@ -174,7 +174,8 @@ float solve(char* expr){
 	temp[k] = '\0';
 
 	subRes = simpleSolve(temp);
-	if (subRes != NAN) {
+
+	if (!isnan(subRes)) {
 	    snprintf(temp, sizeof temp, "%g", subRes);
 	} else {
 	    return NAN;
