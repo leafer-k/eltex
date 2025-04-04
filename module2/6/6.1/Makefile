@@ -1,2 +1,2 @@
 all:
-	gcc main.c -o program -L. -llist
+	gcc -o program main.c -L. -llist

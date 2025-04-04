@@ -201,7 +201,21 @@ void initPerson(Person* new_p) {
     return;
 }
 
+void sort(struct List** list) {
+    struct List* curr = *list;
+    Person* tmp;
 
+    while(curr->next != NULL) {
+	if(strcmp(curr->next->val->lastName, curr->val->lastName) < 0) {
+	    tmp = curr->val;
+	    curr->val = curr->next->val;
+	    curr->next->val = tmp;
+	    curr = *list;
+	    continue;
+	}
+	curr = curr->next;
+    }
+}
 
 
 void addPerson(struct List** arr) {
@@ -218,7 +232,7 @@ void addPerson(struct List** arr) {
     push(arr, new_p);
 }
 
-void editPerson(struct List* arr) {
+void editPerson(struct List** arr) {
     int index;
     printf("Введите индекс контакта для редактирования: ");
     scanf("%d", &index);
@@ -229,7 +243,7 @@ void editPerson(struct List* arr) {
         return;
     }
 
-    struct List* list = arr;
+    struct List* list = *arr;
 
     for(int i = 0; i < index; i++) {
 	list = list->next;
@@ -297,6 +311,7 @@ void editPerson(struct List* arr) {
             break;
         }
     } while (editChoice != 0);
+    sort(arr);
 }
 
 void loadExample(struct List* list) {
@@ -334,7 +349,7 @@ void menu(struct List* list) {
             deleteIndex(&list, delIndex);
             break;
         }
-        case 4: editPerson(list); break;
+        case 4: editPerson(&list); break;
         case 5: loadExample(list);
 	default: break;
         }
