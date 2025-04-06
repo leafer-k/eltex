@@ -63,7 +63,7 @@ ls -l
 total 4
 drwxrwsr-x 2 root practice2 4096 Mar 13 10:51 share
 
-umask 0044
+umask 0004
 
 user1: touch user1.txt
 user2: touch user2.txt
