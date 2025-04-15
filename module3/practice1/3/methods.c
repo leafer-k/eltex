@@ -344,6 +344,7 @@ int loadFromFile(char* filename, struct List** head) {
 	int fd = open(filename, O_RDONLY);
 	int size = 0;
 	char* buff;
+	size_t readBytes;
 
 	if(fd == -1) {
 		perror("File open");
@@ -352,15 +353,27 @@ int loadFromFile(char* filename, struct List** head) {
 
 	clearList(head);
 
-	read(fd, &size, sizeof(int));
+	readBytes = read(fd, &size, sizeof(int));
+
+	if(readBytes != sizeof(int)) {
+		perror("Read size");
+		close(fd);
+		return -1;
+	}
 
 	for(int i = 0; i < size; i++) {
 		Person* new_p = malloc(sizeof( Person));
     	if (!new_p) {
 	        perror("malloc failed");
+			close(fd);
         	return -1;
     	}
-		read(fd, new_p, sizeof(Person));
+		readBytes = read(fd, new_p, sizeof(Person));
+		if(readBytes != sizeof(Person) || !new_p) {
+			perror("Read Person");
+			close(fd);
+			return -1;
+		}
 		push(head, new_p);
 	}
 
@@ -377,6 +390,7 @@ int saveToFile(char* filename, struct List** head) {
 
 	int fd = open(filename, O_WRONLY | O_CREAT, S_IRWXU);
 	int size = 0;
+	size_t written;
 
 	if(fd == -1) {
 		perror("File open");
@@ -388,23 +402,34 @@ int saveToFile(char* filename, struct List** head) {
 		list = list->next;
 	}
 
-	write(fd, &size, sizeof(int));
-
+	if (size) {
+		write(fd, &size, sizeof(int));
+	} else {
+		printf("Error. Size null");
+		close(fd);
+		return -1;
+	}
 	list = *head;
 
 	while(list != NULL) {
-		write(fd, list->val, sizeof(Person));
+		written = write(fd, list->val, sizeof(Person));
+		if(written != sizeof(Person)) {
+			perror("Write");
+			close(fd);
+			return -1;
+		}
 		list = list->next;
 	}
 
 	close(fd);
+
 	return 0;
 }
 
 void menu(struct List* list) {
     int choice;
     do {
-        printf("\n1. Вывести список\n2. Добавить контакт\n3. Удалить контакт\n4. Редактировать\n5. Загрузить пример\n6. Сохранить в файл\n7. Загрузить из файла\n0. Выйти\n");
+        printf("\n1. Вывести список\n2. Добавить контакт\n3. Удалить контакт\n4. Редактировать\n5. Загрузить пример\n6. Сохранить в файл\n7. Загрузить из файла\n8. Очистить список\n0. Выйти\n");
         scanf("%d", &choice);
         getchar();
 		char buff[100];
@@ -424,7 +449,7 @@ void menu(struct List* list) {
 			printf("Введите имя файла для сохранения:\n");
 			scanf("%s", &buff);
 			if(saveToFile(buff, &list) == 0) {
-				printf("Сохранено\n");
+				printf("Сохранено в файл %s\n", buff);
 			}
 			break;
 		}
@@ -436,6 +461,7 @@ void menu(struct List* list) {
 			}
 			break;
 		}
+		case 8: clearList(&list); break;
 	default: break;
         }
     } while (choice != 0);
