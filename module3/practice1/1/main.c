@@ -3,6 +3,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+float strToFloatSqr(char* arg){
+	float side = atof(arg);
+	return side*side;
+}
 
 int main(int argc, char* argv[]) {
 	int rv;
@@ -22,15 +26,11 @@ int main(int argc, char* argv[]) {
 
 	if(child_pid == 0) {
 		for(int i = 1; i <= argc/2; i++) {
-			side = atof(argv[i]);
-			sqr = side*side;
-			printf("(%d) Child: %g\n", getpid(), sqr);
+			printf("(%d) Child: %g\n", getpid(), strToFloatSqr(argv[i]));
 		}
 	} else {
 		for(int i = argc/2 + 1; i < argc; i++) {
-			side = atof(argv[i]);
-			sqr = side*side;
-			printf("(%d) Parent: %g\n", getpid(), sqr);
+			printf("(%d) Parent: %g\n", getpid(), strToFloatSqr(argv[i]));
 		}
 	}
 
