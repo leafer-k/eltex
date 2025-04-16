@@ -1,13 +1,20 @@
 #define MAX_PHONE_NUMS 5
 #define MAX_EMAILS 5
+#define MAX_PHONE_LEN 15
+#define MAX_EMAIL_LEN 75
+#define MAX_NAME_LEN 30
+#define MAX_LNAME_LEN 30
+#define MAX_PAT_LEN 30
+#define MAX_COMPANY_LEN 30
+
 
 typedef struct {
-    char firstName[30];
-    char lastName[30];
-    char patronymic[30];
-    char company[30];
-    char phones[MAX_PHONE_NUMS][15];
-    char emails[MAX_EMAILS][75];
+    char firstName[MAX_NAME_LEN];
+    char lastName[MAX_LNAME_LEN];
+    char patronymic[MAX_PAT_LEN];
+    char company[MAX_COMPANY_LEN];
+    char phones[MAX_PHONE_NUMS][MAX_PHONE_LEN];
+    char emails[MAX_EMAILS][MAX_EMAIL_LEN];
 } Person;
 
 struct List {
