@@ -11,6 +11,9 @@
 #define SAVE_FILE "save.txt"
 #define MAX_READING_PROCESSES 5
 
+#define SEM_WRITE_NAME "/sem_write_task11"
+#define SEM_READ_NAME "/sem_read_task11"
+
 int readers_count = 0;
 
 void read_file() {
@@ -37,12 +40,12 @@ int main(int argc, char* argv[]) {
 	sem_t* write_sem;
 	sem_t* read_sem;
 
-	if((write_sem = sem_open("/sem_write", O_CREAT, 0666, 1)) == SEM_FAILED) {
+	if((write_sem = sem_open(SEM_WRITE_NAME, O_CREAT, 0666, 1)) == SEM_FAILED) {
 		perror("semget");
 		exit(EXIT_FAILURE);
 	}
 
-	if((read_sem = sem_open("/sem_read", O_CREAT, 0666, 5)) == SEM_FAILED) {
+	if((read_sem = sem_open(SEM_READ_NAME, O_CREAT, 0666, 5)) == SEM_FAILED) {
 		perror("semget");
 		exit(EXIT_FAILURE);
 	}
@@ -175,10 +178,10 @@ int main(int argc, char* argv[]) {
 		wait(NULL);
 
         sem_close(read_sem);
-		sem_unlink("/sem_read");
+		sem_unlink(SEM_READ_NAME);
 
         sem_close(write_sem);
-		sem_unlink("/sem_write");
+		sem_unlink(SEM_WRITE_NAME);
 	}
 	exit(EXIT_SUCCESS);
 }
