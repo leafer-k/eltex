@@ -9,6 +9,7 @@
 
 #define MAX_NUMS 1000
 #define SAVE_FILE "save.txt"
+#define SEM_NAME "/sem_task10"
 
 void read_file() {
 	FILE* file = fopen(SAVE_FILE, "r");
@@ -33,7 +34,7 @@ int main(int argc, char* argv[]) {
 
 	sem_t* semid;
 
-	if((semid = sem_open("/sem", O_CREAT, 0666, 1)) == SEM_FAILED) {
+	if((semid = sem_open(SEM_NAME, O_CREAT, 0666, 1)) == SEM_FAILED) {
 		perror("semget");
 		exit(EXIT_FAILURE);
 	}
@@ -138,7 +139,7 @@ int main(int argc, char* argv[]) {
 		wait(NULL);
 
         sem_close(semid);
-		sem_unlink("/sem");
+		sem_unlink(SEM_NAME);
 	}
 	exit(EXIT_SUCCESS);
 }
