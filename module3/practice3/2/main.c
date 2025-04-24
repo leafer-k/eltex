@@ -13,8 +13,7 @@
 
 #define SEM_WRITE_NAME "/sem_write_task11"
 #define SEM_READ_NAME "/sem_read_task11"
-
-int readers_count = 0;
+#define SEM_READERS_NAME "/sem_readers_task11"
 
 void read_file() {
 	FILE* file = fopen(SAVE_FILE, "r");
@@ -39,14 +38,20 @@ int main(int argc, char* argv[]) {
 
 	sem_t* write_sem;
 	sem_t* read_sem;
+	sem_t* readers_sem;
 
 	if((write_sem = sem_open(SEM_WRITE_NAME, O_CREAT, 0666, 1)) == SEM_FAILED) {
-		perror("semget");
+		perror("semget write");
 		exit(EXIT_FAILURE);
 	}
 
-	if((read_sem = sem_open(SEM_READ_NAME, O_CREAT, 0666, 5)) == SEM_FAILED) {
-		perror("semget");
+	if((read_sem = sem_open(SEM_READ_NAME, O_CREAT, 0666, MAX_READING_PROCESSES)) == SEM_FAILED) {
+		perror("semget read");
+		exit(EXIT_FAILURE);
+	}
+
+	if((readers_sem = sem_open(SEM_READERS_NAME, O_CREAT, 0666, 0)) == SEM_FAILED) {
+		perror("semget readers");
 		exit(EXIT_FAILURE);
 	}
 
@@ -83,7 +88,6 @@ int main(int argc, char* argv[]) {
                         exit(EXIT_FAILURE);
                 }
         }
-
 */
 
 
@@ -102,14 +106,26 @@ int main(int argc, char* argv[]) {
 				perror("sem_wait");
 				break;
 			}
-			readers_count++;
 
-			if(readers_count == 1) {
+			if(sem_post(readers_sem) == -1) {
+				perror("sem_post readers");
+				break;
+			}
+
+			int temp = -1;
+			if(sem_getvalue(readers_sem, &temp) == -1) {
+				perror("sem_getvalue");
+				break;
+			}
+
+			if(temp == 1) {
 				if(sem_wait(write_sem) == -1) {
 					perror("sem_wait");
 					break;
 				}
 			}
+
+			temp = -1;
 
 			read_file();
 
@@ -117,9 +133,18 @@ int main(int argc, char* argv[]) {
 				perror("sem_post");
 				break;
 			}
-			readers_count--;
 
-			if(readers_count == 0) {
+			if(sem_wait(readers_sem) == -1) {
+				perror("sem_wait readers");
+				break;
+			}
+
+			if(sem_getvalue(readers_sem, &temp) == -1) {
+				perror("sem_getvalue");
+				break;
+			}
+
+			if(temp == 0) {
 				if(sem_post(write_sem) == -1) {
 					perror("sem_wait");
 					break;
