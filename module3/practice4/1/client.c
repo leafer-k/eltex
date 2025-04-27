@@ -49,6 +49,8 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    printf(">>> Chat started. Type 'exit' to shutdown <<<\n\n");
+
     int pid =  fork();
 
     if(pid == 0) {

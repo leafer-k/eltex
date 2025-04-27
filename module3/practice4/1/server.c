@@ -62,6 +62,8 @@ int main(int argc, char* argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
+	printf(">>> Server started. Type 'exit' to shutdown <<<\n\n");
+
 	int pid =  fork();
 
 	if(pid == 0) {
@@ -101,7 +103,7 @@ char* cli_addr = inet_ntoa(cliaddr->sin_addr);	} else {
 					break;
 				}
 			} else {
-				printf("Client not connected\n");
+				printf("Client not connected\n\n");
 			}
 		}
 		kill(pid, SIGTERM);
