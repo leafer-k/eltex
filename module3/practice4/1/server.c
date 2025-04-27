@@ -20,6 +20,7 @@
 
 int main(int argc, char* argv[]) {
 	int sockfd;
+	int shmid;
 	int clilen = 0, n;
 	struct sockaddr_in servaddr;
 	char buf[MSG_BUF_LEN];
@@ -31,8 +32,6 @@ int main(int argc, char* argv[]) {
 		perror("ftok");
 		exit(EXIT_FAILURE);
 	}
-
-	int shmid;
 
     if((shmid = shmget(shm_key, sizeof(struct sockaddr_in), IPC_CREAT | 0600)) == -1) {
         perror("shmget");
@@ -66,28 +65,59 @@ int main(int argc, char* argv[]) {
 	int pid =  fork();
 
 	if(pid == 0) {
+		int was_connected = 0;
 		while(1) {
 			clilen = sizeof(cliaddr);
 			if(recvfrom(sockfd, buf, MSG_BUF_LEN - 1, 0, (struct sockaddr *) cliaddr, &clilen) < 0) {
 				perror("recvfrom");
 				break;
 			}
-			char* cli_addr = inet_ntoa(cliaddr->sin_addr);
-			printf("[%s:%d]: %s\n", cli_addr, ntohs(cliaddr->sin_port), buf);
+
+			char* cli_ip = inet_ntoa(cliaddr->sin_addr);
+
+			if(was_connected == 0) {
+				printf("%s:%d Connected!\n\n", cli_ip, ntohs(cliaddr->sin_port));
+				was_connected = 1;
+			}
+
+			if(strcmp(buf, "disconnect") == 0) {
+				cliaddr->sin_port = 0;
+				printf("%s disconnected!\n\n", cli_ip);
+				was_connected = 0;
+			} else {
+				printf("[%s:%d]: %s\n", cli_ip, ntohs(cliaddr->sin_port), buf);
+			}
 		}
-	} else {
+char* cli_addr = inet_ntoa(cliaddr->sin_addr);	} else {
 		while(1) {
 			fgets(buf_sendMsg, sizeof(buf_sendMsg), stdin);
+			if(strcmp(buf_sendMsg, "exit\n") == 0) {
+				break;
+			}
 			printf("\n");
-			if(cliaddr) {
+			if(cliaddr->sin_port != 0) {
 				if(sendto(sockfd, buf_sendMsg, strlen(buf_sendMsg) + 1, 0, (struct sockaddr *) cliaddr, sizeof(*cliaddr)) < 0) {
 					perror("sendto");
 					break;
 				}
+			} else {
+				printf("Client not connected\n");
 			}
 		}
-		wait(NULL);
-		close(sockfd);
+		kill(pid, SIGTERM);
+
+		if(close(sockfd) == -1) {
+			perror("shmdt");
+		}
+
+        if(shmdt(cliaddr) == -1) {
+        	perror("shmdt");
+        }
+
+        if(shmctl(shmid, IPC_RMID, NULL) == -1) {
+        	perror("shmctl IPC_RMID");
+        }
+
 	}
 	exit(EXIT_SUCCESS);
 }

@@ -63,14 +63,25 @@ int main(int argc, char* argv[]) {
     } else {
         while(1) {
 	        fgets(buf, sizeof(buf), stdin);
+			if(strcmp(buf, "exit\n") == 0) {
+				strcpy(buf, "disconnect");
+	            if(sendto(sockfd, buf, strlen(buf) + 1, 0, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
+	                perror("sendto");
+	                break;
+	            }
+				break;
+			}
 			printf("\n");
             if(sendto(sockfd, buf, strlen(buf) + 1, 0, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0) {
                 perror("sendto");
                 break;
             }
         }
-        wait(NULL);
-        close(sockfd);
+        kill(pid, SIGTERM);
+        if(close(sockfd) == -1) {
+			perror("close");
+			exit(EXIT_FAILURE);
+		}
     }
 
     exit(EXIT_SUCCESS);
