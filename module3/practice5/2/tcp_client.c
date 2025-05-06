@@ -10,6 +10,7 @@
 
 #define BUFF_SIZE 1024
 #define FILENAME_HEAD "filename:"
+#define EOF_STR "EOF"
 
 void error(const char *msg)
 {
@@ -34,7 +35,8 @@ void parseFilenameSend(char* buff, char* dest) {
         filename_pos++;
         i++;
     }
-    dest[header_len + i - 1] = '\0';
+
+    dest[header_len + i] = '\0';
 }
 
 int main(int argc, char *argv[])
@@ -43,8 +45,8 @@ int main(int argc, char *argv[])
     struct sockaddr_in serv_addr;
     struct hostent *server;
 
-	char buff[BUFF_SIZE];
-	char filenameSend[BUFF_SIZE];
+    char buff[BUFF_SIZE];
+    char filenameSend[BUFF_SIZE];
     printf("TCP CLIENT\n");
 
     if (argc < 3) {
@@ -52,55 +54,57 @@ int main(int argc, char *argv[])
        exit(0);
     }
 
-	portno = atoi(argv[2]);
+        portno = atoi(argv[2]);
 
-	my_sock = socket(AF_INET, SOCK_STREAM, 0);
+        my_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (my_sock < 0)
         error("ERROR opening socket");
 
-	server = gethostbyname(argv[1]);
+        server = gethostbyname(argv[1]);
     if (server == NULL) {
         fprintf(stderr,"ERROR, no such host\n");
         exit(0);
     }
     // заполенние структуры serv_addr
-	bzero((char *) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr,
+        bzero((char *) &serv_addr, sizeof(serv_addr));
+        serv_addr.sin_family = AF_INET;
+        bcopy((char *)server->h_addr,
          (char *)&serv_addr.sin_addr.s_addr,
          server->h_length);
     // установка порта
-	serv_addr.sin_port = htons(portno);
+        serv_addr.sin_port = htons(portno);
 
-	// Шаг 2 - установка соединения
-	if (connect(my_sock,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
+        // Шаг 2 - установка соединения
+        if (connect(my_sock,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
         error("ERROR connecting");
 
-	// Шаг 3 - чтение и передача сообщений
-	printf("While:\n");
-	//while (1) {
-		printf("Enter Filename\n");
-		fgets(&buff[0], sizeof(buff) - 1, stdin);
+        // Шаг 3 - чтение и передача сообщений
+        printf("While:\n");
+        //while (1) {
+                printf("Enter Filename\n");
+                fgets(&buff[0], sizeof(buff) - 1, stdin);
 
-		buff[strlen(buff) - 1] = '\0';
+                buff[strlen(buff) - 1] = '\0';
 
-		int fd = open(buff, O_RDONLY);
-	    if (fd == -1) {
-    		perror("open");
-			return 1;
-    	}
+                int fd = open(buff, O_RDONLY);
+            if (fd == -1) {
+                perror("open");
+                        return 1;
+        }
 
-		parseFilenameSend(buff, filenameSend);
+                parseFilenameSend(buff, filenameSend);
 
-		send(my_sock, filenameSend, strlen(filenameSend), 0);
+                send(my_sock, filenameSend, strlen(filenameSend), 0);
 
-		int sentLen = 0;
-
-		while((sentLen = read(fd, buff, sizeof(buff))) > 0) {
-			send(my_sock, &buff[0], sentLen, 0);
-		}
-
-		send(my_sock, 0, 0, 0);
+                int sentLen = 0;
+                long totalSent = 0;
+                while((sentLen = read(fd, buff, sizeof(buff))) > 0) {
+                        send(my_sock, &buff[0], sentLen, 0);
+                        totalSent += sentLen;
+                        usleep(5e3);
+                }
+                printf("Sent %ld bytes\n", totalSent);
+                send(my_sock, EOF_STR, strlen(EOF_STR), 0);
 
         if (!strcmp(&buff[0], "quit\n"))
         {

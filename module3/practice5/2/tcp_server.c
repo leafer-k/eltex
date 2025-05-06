@@ -15,10 +15,11 @@
 #include <sys/select.h>
 #include <errno.h>
 
-#define QUEUE_LEN 5
+#define QUEUE_LEN 20
 #define FILENAME_LEN 128
 #define BUFF_LEN 1024
 #define DOWNLOAD_FOLDER "./downloads/"
+#define EOF_STR "EOF"
 
 // Функция обработки ошибок
 void error(const char *msg) {
@@ -104,7 +105,10 @@ void clihandler (int sock) {
 		    return;
 		}
 
-		while((bytes_recv = read(sock, &buff[0], sizeof(buff))) > 0) {
+		while((bytes_recv = read(sock, &buff[0], sizeof(buff))) != -1) {
+			if(strncmp(buff, EOF_STR, strlen(EOF_STR)) == 0) {
+				break;
+			}
 			bytes_written = write(fd, buff, bytes_recv);
 			if(bytes_written == -1) {
 				perror("write");
