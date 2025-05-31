@@ -35,7 +35,7 @@ struct client_data {
 
 static struct client_data* clients[MAX_CONNECTIONS];
 static uint32_t my_addr;
-static char eth_name[128];
+static char interf_name[128];
 
 unsigned short checksum(void *b, int len) {
     unsigned short *buf = b;
@@ -100,8 +100,8 @@ int addCliInfo(struct client_data* arr[], uint32_t addr, int port){
 
 int sendData(int sock_raw, struct client_data* cli, char* rcv_data, int server_port, unsigned char gateway_mac[ETH_ALEN]) {
     char data[BUFFER_SIZE + 10];
-    rcv_data[strlen(rcv_data)-1] = '\0';
     sprintf(data, "%s %d", rcv_data, cli->msg_count);
+    data[strlen(data)] = '\0';
     
     char packet[ETH_FRAME_LEN];
     memset(packet, 0, sizeof(packet));
@@ -112,7 +112,7 @@ int sendData(int sock_raw, struct client_data* cli, char* rcv_data, int server_p
     eth->h_proto = htons(ETH_P_IP);
     
     struct ifreq ifr;
-	strncpy(ifr.ifr_name, eth_name, IFNAMSIZ);
+	strncpy(ifr.ifr_name, interf_name, IFNAMSIZ);
 	ioctl(sock_raw, SIOCGIFHWADDR, &ifr);
     memcpy(eth->h_source, ifr.ifr_hwaddr.sa_data, ETH_ALEN);
 	memcpy(eth->h_dest, gateway_mac, ETH_ALEN);
@@ -137,7 +137,7 @@ int sendData(int sock_raw, struct client_data* cli, char* rcv_data, int server_p
     udp->check = 0;
 
     char *payload = packet + sizeof(struct ethhdr) + sizeof(struct iphdr) + sizeof(struct udphdr);
-    memcpy(payload, data, strlen(data));
+    memcpy(payload, data, strlen(data) + 1);
 
     ip->check = checksum((unsigned short *)ip, sizeof(struct iphdr));
 
@@ -145,12 +145,11 @@ int sendData(int sock_raw, struct client_data* cli, char* rcv_data, int server_p
     memset(&sa, 0, sizeof(sa));
     sa.sll_family = AF_PACKET;
     sa.sll_protocol = htons(ETH_P_IP);
-    sa.sll_ifindex = if_nametoindex(eth_name);
+    sa.sll_ifindex = if_nametoindex(interf_name);
     sa.sll_halen = ETH_ALEN;
     memset(sa.sll_addr, 0xFF, ETH_ALEN);
 
-    if (sendto(sock_raw, packet, 
-              sizeof(struct ethhdr) + ntohs(ip->tot_len),
+    if (sendto(sock_raw, packet, sizeof(struct ethhdr) + ntohs(ip->tot_len),
               0, (struct sockaddr *)&sa, sizeof(sa)) < 0) {
         perror("sendto failed");
         return -1;
@@ -188,6 +187,7 @@ int process_packet(char* buffer, int size, int server_port, int sock_raw){
 							delCliByIndex(clients, index);
 						}
 					} else {
+						data[data_size] = '\0';
 						clients[index]->msg_count++;
 						printf("Recieved %d bytes from %s:%d (%d)\n", data_size, ip_str, ntohs(udp->source), clients[index]->msg_count);
 						unsigned char gateway_mac[ETH_ALEN];
@@ -208,10 +208,8 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }    
     
-    strcpy(eth_name, argv[2]);
-    
-    printf("Server started\n");
-    
+    strcpy(interf_name, argv[2]);
+        
     for(int i = 0; i < MAX_CONNECTIONS; i++) {
 		clients[i] = malloc(sizeof(struct client_data));
         if (clients[i] == NULL) {
@@ -232,6 +230,8 @@ int main(int argc, char* argv[]) {
 		exit(1);
 	}
 	
+    printf("Server started\n");
+
 	unsigned char buffer[BUFFER_SIZE];
 	
 	while(1){
