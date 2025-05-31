@@ -26,10 +26,12 @@
 
 static uint32_t server_addr;
 static uint32_t gateway_addr;
+static uint32_t my_addr;
+static int my_port;
 static int server_port;
 static char interf_name[NAME_LEN];
 static unsigned char gateway_mac[ETH_ALEN];
-
+static int sock_raw = -1;
 
 char* getGatewayIP(const char* ifname) {
     FILE *fp;
@@ -122,8 +124,7 @@ unsigned short checksum(void *b, int len) {
     return ~sum;
 }
 
-int sendData(int sock_raw, const char* data, int my_port, uint32_t my_addr, 
-             const unsigned char gateway_mac[ETH_ALEN]) 
+int sendData(int sock_raw, const char* data, int my_port, uint32_t my_addr, const unsigned char gateway_mac[ETH_ALEN]) 
 {
     char packet[ETH_FRAME_LEN];
     memset(packet, 0, sizeof(packet));
@@ -203,6 +204,16 @@ int process_packet(char* buffer, int size, int my_port, int sock_raw){
     return -1;
 }
 
+void handle_signal(int sig) {
+    if (sig == SIGINT || sig == SIGTERM) {
+        if (sock_raw != -1) {
+            sendData(sock_raw, END_STR, my_port, my_addr, gateway_mac);
+            close(sock_raw);
+            exit(EXIT_SUCCESS);
+        }
+    }
+}
+
 int main(int argc, char* argv[]) {
 	if(argc < 5) {
 		printf("Use: %s <server ip> <server port> <interface> <my port>\n", argv[0]);
@@ -211,8 +222,8 @@ int main(int argc, char* argv[]) {
 
 	server_port = atoi(argv[2]);
 	printf("srv prt: %d\n", server_port);
-	int my_port = atoi(argv[4]);
-	int sock_raw = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+	my_port = atoi(argv[4]);
+	sock_raw = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
 	
 	strncpy(interf_name, argv[3], strlen(argv[3]));
 	server_addr = inet_addr(argv[1]);
@@ -224,7 +235,7 @@ int main(int argc, char* argv[]) {
 	
 	gateway_addr = inet_addr(getGatewayIP(interf_name));
 	
-	uint32_t my_addr = getInterfaceIP(interf_name);
+	my_addr = getInterfaceIP(interf_name);
 	
 	if(sock_raw == -1) {
 		perror("Socket error");
@@ -238,6 +249,8 @@ int main(int argc, char* argv[]) {
 	unsigned char buffer[BUFFER_SIZE];
 
     if(pid == 0) {
+		signal(SIGINT, handle_signal);
+		signal(SIGTERM, handle_signal);
         while(1) {
 			int data_size = recvfrom(sock_raw, buffer, sizeof(buffer), 0, NULL, NULL);
 			if(data_size == -1) {
