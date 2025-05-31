@@ -37,8 +37,6 @@ static struct client_data* clients[MAX_CONNECTIONS];
 static uint32_t my_addr;
 static char eth_name[128];
 
-const unsigned char gateway_mac[ETH_ALEN] = {0x30, 0x5a, 0x3a, 0x6e, 0xbf, 0xa8};  
-
 unsigned short checksum(void *b, int len) {
     unsigned short *buf = b;
     unsigned int sum = 0;
@@ -100,7 +98,7 @@ int addCliInfo(struct client_data* arr[], uint32_t addr, int port){
 	return -1;
 }
 
-int sendData(int sock_raw, struct client_data* cli, char* rcv_data, int server_port) {
+int sendData(int sock_raw, struct client_data* cli, char* rcv_data, int server_port, unsigned char gateway_mac[ETH_ALEN]) {
     char data[BUFFER_SIZE + 10];
     rcv_data[strlen(rcv_data)-1] = '\0';
     sprintf(data, "%s %d", rcv_data, cli->msg_count);
@@ -192,8 +190,9 @@ int process_packet(char* buffer, int size, int server_port, int sock_raw){
 					} else {
 						clients[index]->msg_count++;
 						printf("Recieved %d bytes from %s:%d (%d)\n", data_size, ip_str, ntohs(udp->source), clients[index]->msg_count);
-						
-						sendData(sock_raw, clients[index], data, server_port);
+						unsigned char gateway_mac[ETH_ALEN];
+						memcpy(gateway_mac, eth->h_source, ETH_ALEN);
+						sendData(sock_raw, clients[index], data, server_port, gateway_mac);
 					}
 					return 0;
                 }
@@ -244,6 +243,4 @@ int main(int argc, char* argv[]) {
 		}
 		process_packet(buffer, data_size, server_port, sock_raw);
 	}
-	
-	
 }
